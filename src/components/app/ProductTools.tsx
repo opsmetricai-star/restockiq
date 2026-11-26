@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logMovement } from "@/lib/movements";
 
 type P = { id: string; sku: string; name: string; category: string | null; supplier: string | null; unit_cost: number; price: number; on_hand: number; on_order: number; lead_time_days: number; service_level: number; min_order_qty: number };
 const note = (ok: boolean) => `text-sm ${ok ? "text-green-700" : "text-red-600"}`;
@@ -16,7 +17,9 @@ export function EditProduct({ p }: { p: P }) {
     const sl = Number(f.service_level) / 100;
     if (!f.name.trim() || sl < 0.5 || sl > 0.999 || Number(f.min_order_qty) < 1) { setMsg({ ok: false, t: "Check the values: service level must be 50 to 99.9 and minimum order at least 1." }); return; }
     setBusy(true);
-    const { error } = await createClient().from("products").update({ name: f.name.trim(), category: f.category, supplier: f.supplier, unit_cost: Number(f.unit_cost), price: Number(f.price), on_hand: Number(f.on_hand), on_order: Number(f.on_order), lead_time_days: Number(f.lead_time_days), service_level: sl, min_order_qty: Number(f.min_order_qty) }).eq("id", p.id);
+    const sb = createClient();
+    const { error } = await sb.from("products").update({ name: f.name.trim(), category: f.category, supplier: f.supplier, unit_cost: Number(f.unit_cost), price: Number(f.price), on_hand: Number(f.on_hand), on_order: Number(f.on_order), lead_time_days: Number(f.lead_time_days), service_level: sl, min_order_qty: Number(f.min_order_qty) }).eq("id", p.id);
+    if (!error) await logMovement(sb, { sku: p.sku, delta: Number(f.on_hand) - p.on_hand, balance: Number(f.on_hand), reason: "edit", note: "On-hand edited on product page" });
     setMsg(error ? { ok: false, t: error.message } : { ok: true, t: "Saved." });
     setBusy(false); router.refresh();
   }
@@ -48,7 +51,9 @@ export function RecordSale({ sku, onHand, id }: { sku: string; onHand: number; i
     const { data: ex } = await sb.from("sales").select("qty").eq("sku", sku).eq("sold_on", f.date).maybeSingle();
     const a = await sb.from("sales").upsert({ user_id: user!.id, sku, sold_on: f.date, qty: (ex?.qty ?? 0) + qty }, { onConflict: "user_id,sku,sold_on" });
     const cur = await sb.from("products").select("on_hand").eq("id", id).single();
-    const b = await sb.from("products").update({ on_hand: Math.max(0, (cur.data?.on_hand ?? onHand) - qty) }).eq("id", id);
+    const before = cur.data?.on_hand ?? onHand; const after = Math.max(0, before - qty);
+    const b = await sb.from("products").update({ on_hand: after }).eq("id", id);
+    if (!b.error) await logMovement(sb, { sku, delta: after - before, balance: after, reason: "sale", note: `Sale on ${f.date}` });
     if (a.error || b.error) setMsg({ ok: false, t: (a.error ?? b.error)!.message });
     else { setMsg({ ok: true, t: "Sale recorded and stock reduced." }); form.reset(); router.refresh(); }
   }
@@ -62,7 +67,7 @@ export function RecordSale({ sku, onHand, id }: { sku: string; onHand: number; i
   );
 }
 
-export function AdjustStock({ id, onHand }: { id: string; onHand: number }) {
+export function AdjustStock({ id, sku, onHand }: { id: string; sku: string; onHand: number }) {
   const router = useRouter();
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   async function go(e: React.FormEvent<HTMLFormElement>) {
@@ -74,11 +79,13 @@ export function AdjustStock({ id, onHand }: { id: string; onHand: number }) {
     const cur = ((await sb.from("products").select("on_hand").eq("id", id).single()).data?.on_hand ?? onHand);
     if (cur + d < 0) { setMsg({ ok: false, t: "Adjustment would make stock negative." }); return; }
     const { error } = await sb.from("products").update({ on_hand: cur + d }).eq("id", id);
+    if (!error) await logMovement(sb, { sku, delta: d, balance: cur + d, reason: "adjustment", note: String(new FormData(form).get("note") || "") });
     if (error) setMsg({ ok: false, t: error.message }); else { setMsg({ ok: true, t: `Stock is now ${cur + d}.` }); form.reset(); router.refresh(); }
   }
   return (
     <form onSubmit={go} className="card flex flex-wrap items-end gap-3 p-6">
       <label className="text-sm font-medium">Adjust stock by<input name="delta" type="number" required placeholder="e.g. 50 or -10" className="field mt-1" /></label>
+      <label className="text-sm font-medium">Reason<input name="note" maxLength={120} placeholder="e.g. cycle count" className="field mt-1" /></label>
       <button className="btn btn-outline">Apply adjustment</button>
       {msg && <span className={note(msg.ok)}>{msg.t}</span>}
     </form>

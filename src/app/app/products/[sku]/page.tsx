@@ -15,6 +15,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ sku:
   const plan = (await loadPlan()).find((r) => r.sku === sku);
   const since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
   const { data: sales } = await sb.from("sales").select("sold_on,qty").eq("sku", sku).gte("sold_on", since).order("sold_on").limit(1000);
+  const { data: moves } = await sb.from("stock_movements").select("id,delta,balance,reason,note,created_at").eq("sku", sku).order("created_at", { ascending: false }).limit(10);
   const { data: fcs } = await sb.from("forecasts").select("method,daily_forecast,wape,bias,horizon_days,created_at").eq("sku", sku).order("created_at", { ascending: false }).limit(5);
 
   const chart: { date: string; actual?: number; forecast?: number }[] = (sales ?? []).map((s) => ({ date: s.sold_on.slice(5), actual: s.qty }));
@@ -43,7 +44,14 @@ export default async function ProductDetail({ params }: { params: Promise<{ sku:
       </div>
       <div className="space-y-6">
         <EditProduct p={p} />
-        <div className="grid gap-6 lg:grid-cols-2"><RecordSale sku={p.sku} onHand={p.on_hand} id={p.id} /><AdjustStock id={p.id} onHand={p.on_hand} /></div>
+        <div className="grid gap-6 lg:grid-cols-2"><RecordSale sku={p.sku} onHand={p.on_hand} id={p.id} /><AdjustStock id={p.id} sku={p.sku} onHand={p.on_hand} /></div>
+        {!!moves?.length && (
+          <div className="card overflow-x-auto p-2">
+            <div className="flex items-center justify-between p-3"><h2 className="font-bold">Recent stock changes</h2><Link href={`/app/history?sku=${encodeURIComponent(p.sku)}`} className="text-sm font-bold text-brand">All history</Link></div>
+            <table className="data"><thead><tr><th>When</th><th>Reason</th><th>Change</th><th>Balance</th><th>Note</th></tr></thead>
+              <tbody>{moves.map((m) => (<tr key={m.id}><td>{new Date(m.created_at).toLocaleString()}</td><td className="capitalize">{m.reason}</td><td className={m.delta < 0 ? "font-bold text-red-600" : "font-bold text-green-700"}>{m.delta > 0 ? "+" : ""}{m.delta}</td><td>{m.balance}</td><td>{m.note}</td></tr>))}</tbody></table>
+          </div>
+        )}
         {!!fcs?.length && (
           <div className="card overflow-x-auto p-2">
             <table className="data"><thead><tr><th>Forecast run</th><th>Method</th><th>Daily demand</th><th>WAPE</th><th>Bias</th></tr></thead>

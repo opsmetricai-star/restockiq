@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logMovement } from "@/lib/movements";
 
 const msgCls = (ok: boolean) => `rounded-lg p-3 text-sm ${ok ? "bg-sky" : "bg-red-50 text-red-700"}`;
 
@@ -95,7 +96,7 @@ export function PoStatus({ id, status }: { id: string; status: string }) {
         const { data: lines } = await sb.from("purchase_order_lines").select("sku,qty").eq("po_id", id);
         for (const l of lines ?? []) {
           const { data: p } = await sb.from("products").select("id,on_hand").eq("sku", l.sku).maybeSingle();
-          if (p) await sb.from("products").update({ on_hand: p.on_hand + l.qty }).eq("id", p.id);
+          if (p) { await sb.from("products").update({ on_hand: p.on_hand + l.qty }).eq("id", p.id); await logMovement(sb, { sku: l.sku, delta: l.qty, balance: p.on_hand + l.qty, reason: "receipt", note: "Purchase order received" }); }
         }
       }
       router.refresh();
