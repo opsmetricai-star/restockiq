@@ -16,7 +16,7 @@ export default async function Orders() {
             const total = ls.reduce((s, l) => s + l.qty * Number(l.unit_cost), 0);
             return (
               <div key={po.id} className="card p-5">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="font-bold">{po.supplier}</div><div className="text-sm text-muted">{new Date(po.created_at).toLocaleDateString()} · {ls.length} lines · {money(total)}</div></div><PoStatus id={po.id} status={po.status} /></div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="font-bold">{po.supplier}</div><div className="text-sm text-muted">{new Date(po.created_at).toLocaleDateString()} | {ls.length} lines | {money(total)}</div></div><PoStatus id={po.id} status={po.status} /></div>
                 <table className="data"><thead><tr><th>SKU</th><th>Qty</th><th>Unit cost</th></tr></thead><tbody>{ls.map((l) => (<tr key={l.sku}><td>{l.sku}</td><td>{l.qty}</td><td>{money(Number(l.unit_cost))}</td></tr>))}</tbody></table>
               </div>
             );

@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!process.env.GEMINI_API_KEY) return NextResponse.json({ error: "AI is not configured (GEMINI_API_KEY missing)." }, { status: 503 });
+  if (!process.env.GEMINI_API_KEY) return NextResponse.json({ error: "AI analysis is temporarily unavailable." }, { status: 503 });
   const parsed = body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
@@ -42,8 +43,8 @@ export async function POST(req: Request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const prompt = `You are an inventory planning analyst. Use ONLY the JSON data below. Never invent numbers; quote figures exactly as given.\n${parsed.data.question ? `User question: ${parsed.data.question}\n` : "Task: summarise inventory health and list the most important risks.\n"}DATA:\n${JSON.stringify(facts)}`;
   try {
-    const res = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    const call = () => ai.models.generateContent({
+      model: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -58,12 +59,21 @@ export async function POST(req: Request) {
         },
       },
     });
-    const out = outputSchema.safeParse(JSON.parse(res.text ?? "{}"));
+    let res: Awaited<ReturnType<typeof call>> | null = null;
+    for (let attempt = 0; attempt < 2 && !res; attempt++) {
+      try { res = await Promise.race([call(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("503 timeout")), 20000))]); } catch (err) {
+        const transient = /\b(429|500|503|504)\b|UNAVAILABLE|high demand/i.test(err instanceof Error ? err.message : "");
+        if (!transient || attempt === 1) throw err;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+    const out = outputSchema.safeParse(JSON.parse(res?.text ?? "{}"));
     if (!out.success) return NextResponse.json({ error: "The AI returned an unexpected format. Please retry." }, { status: 502 });
     await sb.from("ai_insights").insert({ user_id: user.id, kind: parsed.data.question ? "question" : "summary", prompt: parsed.data.question ?? null, response: out.data });
     await bumpUsage(user.id, "ai");
     return NextResponse.json(out.data);
   } catch (e) {
-    return NextResponse.json({ error: "AI request failed. " + (e instanceof Error ? e.message.slice(0, 160) : "") }, { status: 502 });
+    console.error("AI request failed", e instanceof Error ? e.message.slice(0, 300) : e);
+    return NextResponse.json({ error: "The AI analyst is busy right now. Please try again in a moment." }, { status: 502 });
   }
 }

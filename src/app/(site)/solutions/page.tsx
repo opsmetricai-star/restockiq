@@ -7,9 +7,9 @@ export const metadata = { title: "Solutions | RestockIQ" };
 export default function Solutions() {
   return (
     <>
-      <PageHero eyebrow="Solutions" title="AI-native planning that drives profitable growth">
-        <p>RestockIQ Solutions give retailers, manufacturers and wholesalers one platform for deciding and acting across demand, inventory, merchandising, pricing and supply chain operations.</p>
-        <p>Built on a unified data foundation, every module shares the same forecasts, constraints and inventory positions, so teams scale new capabilities at their own pace.</p>
+      <PageHero eyebrow="Solutions" title="Five AI capabilities, one planning engine">
+        <p>Forecasting, inventory optimization, replenishment, procurement and AI analysis share one data model, so each decision builds on the last.</p>
+        <p>Each capability produces a number you can audit and an action you can execute.</p>
       </PageHero>
       {SOLUTION_GROUPS.map((g, n) => (
         <Section key={g} tone={n % 2 ? "mist" : "white"}>
@@ -19,7 +19,7 @@ export default function Solutions() {
               <Link key={s.slug} href={`/solutions/${s.slug}`} className="card card-hover block p-7">
                 <h3 className="text-lg font-bold">{s.title}</h3>
                 <p className="mt-2 text-muted">{s.summary}</p>
-                <div className="mt-4 font-bold text-brand">Learn more →</div>
+                
               </Link>
             ))}
           </div>

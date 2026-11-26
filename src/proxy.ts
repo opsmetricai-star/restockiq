@@ -9,8 +9,8 @@ export async function proxy(request: NextRequest) {
   const protectedPath = path.startsWith("/app");
 
   if (!url || !anon) {
-    // Supabase not configured: block the app, leave the public site working.
-    if (protectedPath) return NextResponse.redirect(new URL("/login?error=not_configured", request.url));
+    // Without auth config, keep the app closed and the public site up.
+    if (protectedPath) return NextResponse.redirect(new URL("/login", request.url));
     return NextResponse.next();
   }
 

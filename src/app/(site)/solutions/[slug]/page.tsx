@@ -19,15 +19,15 @@ export default async function SolutionPage({ params }: { params: Promise<{ slug:
   if (!s) notFound();
   const related = SOLUTIONS.filter((x) => x.group === s.group && x.slug !== s.slug).slice(0, 3);
   const benefits = [
-    ["Decisions grounded in data", `${s.title} uses one shared set of forecasts, constraints and inventory positions, so every team plans from the same numbers.`],
-    ["Automation where it counts", "Routine decisions run on their own. Planners step in only on exceptions, with the context needed to decide quickly."],
-    ["Measurable results", `Track the effect on service level, stock value and waste. Typical goal: ${s.outcome.toLowerCase()}.`],
+    ["One source of truth", `${s.title} runs on the same forecasts, constraints and stock positions as every other module, so teams act on identical numbers.`],
+    ["Automation with exceptions", "Routine decisions execute automatically. Planners step in only where judgment adds value, with full context."],
+    ["Measurable results", `Track the effect on service level and stock value. Business goal: ${s.outcome.charAt(0).toLowerCase() + s.outcome.slice(1)}.`],
   ];
   const steps = [
-    ["Connect your data", "Import sales, stock, supplier and calendar data through CSV or integrations."],
-    ["Model the business", "Set service targets, lead times, shelf-life and cost parameters per item and location."],
-    ["Generate recommendations", "The engine computes forecasts, targets and proposed actions with transparent logic."],
-    ["Act and learn", "Approve, adjust or automate. Outcomes feed back to improve the next cycle."],
+    ["Load your data", "Import products, stock and daily sales history from CSV."],
+    ["Set your policy", "Define service level, lead time, cost and minimum order quantity per SKU."],
+    ["Compute", "The engine produces forecasts, targets and recommended actions with transparent logic."],
+    ["Execute", "Turn recommendations into purchase orders and track receipt against plan."],
   ];
   return (
     <>
@@ -36,7 +36,7 @@ export default async function SolutionPage({ params }: { params: Promise<{ slug:
         <p className="font-bold text-navy">{s.outcome}.</p>
       </PageHero>
       <Section>
-        <h2 className="h-display mb-10 text-center">Why teams choose {s.title.toLowerCase()} with RestockIQ</h2>
+        <h2 className="h-display mb-10 text-center">What {s.title.toLowerCase()} delivers</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {benefits.map(([t, d]) => (<div key={t} className="card p-8"><h3 className="text-xl font-bold">{t}</h3><p className="mt-3 text-muted">{d}</p></div>))}
         </div>

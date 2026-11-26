@@ -6,17 +6,17 @@ import { PLANS, FREE_LIMITS } from "@/lib/content";
 export const metadata = { title: "Pricing | RestockIQ" };
 
 const faqs = [
-  ["How do I pay?", "Choose a plan and complete checkout on our secure payment page. After paying, open Billing in your workspace and submit your payment reference. We verify it and activate your plan."],
-  ["Is activation instant?", "Activation happens after payment is verified by our team, so it can take a short while. A redirect alone never unlocks a plan."],
-  ["Can I start free?", `Yes. The free workspace includes ${FREE_LIMITS.skus} SKUs, ${FREE_LIMITS.forecasts} forecast runs and ${FREE_LIMITS.ai} AI insights per month.`],
-  ["Which currency?", "Prices are listed in USD."],
+  ["How does billing work?", "Create an account, open Billing, and pay for your plan through the secure checkout. Submit your payment reference and your plan is activated once the payment is verified."],
+  ["Is there a free workspace?", `Yes. Every account starts with ${FREE_LIMITS.skus} SKUs, ${FREE_LIMITS.forecasts} forecast runs and ${FREE_LIMITS.ai} AI analyses per month.`],
+  ["What currency are prices in?", "All prices are in US dollars per month."],
+  ["What happens at a limit?", "Imports, forecasts and AI analyses stop at your plan limit and prompt you to upgrade. Existing data is never deleted."],
 ];
 
 export default function Pricing() {
   return (
     <>
-      <PageHero eyebrow="Pricing" title="Simple plans that scale with your catalogue" image={false} cta={false}>
-        <p>Start free, upgrade when you need more SKUs, forecasts or AI planning. All plans include secure storage, row-level data isolation and CSV import and export.</p>
+      <PageHero eyebrow="Pricing" title="Pricing that scales with your catalogue" image={false} cta={false}>
+        <p>Every plan includes the full planning engine: forecasting, inventory optimization, replenishment, purchase orders and the AI analyst. Plans differ by volume.</p>
       </PageHero>
       <Section>
         <div className="grid gap-6 lg:grid-cols-3">
@@ -27,14 +27,14 @@ export default function Pricing() {
               <p className="mt-2 text-muted">{p.blurb}</p>
               <div className="mt-6 text-5xl font-bold">${p.price}<span className="text-base font-medium text-muted"> / month</span></div>
               <ul className="my-8 flex-1 space-y-3">{p.features.map((f) => (<li key={f} className="flex gap-2"><Check className="mt-0.5 shrink-0 text-brand" size={18} />{f}</li>))}</ul>
-              <a href={p.href} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Choose {p.name}</a>
+              <Link href={`/signup?plan=${p.id}`} className="btn btn-primary">Sign up</Link>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center text-muted">Prefer to try first? <Link href="/signup" className="font-bold text-brand">Start free</Link></p>
+        <p className="mt-6 text-center text-muted">Already have an account? <Link href="/login?next=/app/billing" className="font-bold text-brand">Sign in</Link> to upgrade.</p>
       </Section>
       <Section tone="mist">
-        <h2 className="h-display mb-8 text-center">Questions, answered</h2>
+        <h2 className="h-display mb-8 text-center">Billing questions</h2>
         <div className="mx-auto max-w-3xl space-y-3">
           {faqs.map(([q, a]) => (<details key={q} className="card p-5"><summary className="cursor-pointer font-bold">{q}</summary><p className="mt-3 text-muted">{a}</p></details>))}
         </div>

@@ -6,30 +6,30 @@ import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/site/Logo";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
-const TITLES: Record<Mode, string> = { login: "Sign in to RestockIQ", signup: "Create your free workspace", forgot: "Reset your password", reset: "Choose a new password" };
+const TITLES: Record<Mode, string> = { login: "Sign in to RestockIQ", signup: "Create your RestockIQ account", forgot: "Reset your password", reset: "Choose a new password" };
 
 export function AuthForm({ mode, configured }: { mode: Mode; configured: boolean }) {
   const router = useRouter();
   const sp = useSearchParams();
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(sp.get("error") === "not_configured" ? "Authentication is not configured yet (missing Supabase environment variables)." : "");
+  const [err, setErr] = useState(sp.get("error") === "not_configured" ? "Sign-in is temporarily unavailable. Please try again shortly." : "");
   const [info, setInfo] = useState("");
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!configured) { setErr("Authentication is not configured yet (missing Supabase environment variables)."); return; }
+    if (!configured) { setErr("Sign-in is temporarily unavailable. Please try again shortly."); return; }
     setBusy(true); setErr(""); setInfo("");
     const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const sb = createClient();
-    const origin = window.location.origin;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     if (mode === "login") {
       const { error } = await sb.auth.signInWithPassword({ email: f.email, password: f.password });
-      if (error) setErr(error.message); else { router.push(sp.get("next") || "/app"); router.refresh(); }
+      if (error) setErr(error.message); else { router.push(sp.get("next") || (sp.get("plan") ? "/app/billing" : "/app")); router.refresh(); }
     } else if (mode === "signup") {
-      const { data, error } = await sb.auth.signUp({ email: f.email, password: f.password, options: { data: { full_name: f.full_name, org_name: f.org_name }, emailRedirectTo: `${origin}/auth/callback` } });
+      const { data, error } = await sb.auth.signUp({ email: f.email, password: f.password, options: { data: { full_name: f.full_name, org_name: f.org_name }, emailRedirectTo: `${origin}/auth/callback${sp.get("plan") ? "?next=/app/billing" : ""}` } });
       if (error) setErr(error.message);
-      else if (data.session) { router.push("/app"); router.refresh(); }
-      else setInfo("Check your inbox to confirm your email, then sign in.");
+      else if (data.session) { router.push(sp.get("plan") ? "/app/billing" : "/app"); router.refresh(); }
+      else setInfo("Check your inbox and confirm your email address, then sign in.");
     } else if (mode === "forgot") {
       const { error } = await sb.auth.resetPasswordForEmail(f.email, { redirectTo: `${origin}/auth/callback?next=/reset-password` });
       if (error) setErr(error.message); else setInfo("If that email exists, a reset link is on its way.");
@@ -43,7 +43,7 @@ export function AuthForm({ mode, configured }: { mode: Mode; configured: boolean
   return (
     <div className="hero-grid flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <Link href="/" className="mb-8"><Logo /></Link>
-      <form onSubmit={submit} className="card w-full max-w-md space-y-4 p-8 shadow-lg">
+      <form method="post" onSubmit={submit}className="card w-full max-w-md space-y-4 p-8 shadow-lg">
         <h1 className="text-2xl font-bold">{TITLES[mode]}</h1>
         {mode === "signup" && (<><input name="full_name" required placeholder="Full name" className="field" /><input name="org_name" required placeholder="Company" className="field" /></>)}
         {mode !== "reset" && <input name="email" type="email" required placeholder="Email" className="field" autoComplete="email" />}

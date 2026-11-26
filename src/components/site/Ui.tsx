@@ -38,8 +38,8 @@ export function PageHero({ eyebrow, title, children, cta = true, image = true }:
           {children && <div className="mt-6 max-w-[640px] space-y-4 text-[17px] leading-relaxed text-muted">{children}</div>}
           {cta && (
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/demo-request" className="btn btn-primary">Request a demo</Link>
-              <Link href="/pricing" className="btn btn-outline">View pricing</Link>
+              <Link href="/signup" className="btn btn-primary">Create account</Link>
+              <Link href="/login" className="btn btn-outline">Sign in</Link>
             </div>
           )}
         </div>
@@ -49,7 +49,7 @@ export function PageHero({ eyebrow, title, children, cta = true, image = true }:
   );
 }
 
-export function CtaBand({ title = "Ready to transform your supply chain & retail planning?", text = "Tell us about your operation and we will show you how a unified, AI-native platform can drive profitable growth across your sales and distribution channels.", primary = { href: "/signup", label: "Get started" }, secondary = { href: "/solutions", label: "Check out our solutions" } }: { title?: string; text?: string; primary?: { href: string; label: string }; secondary?: { href: string; label: string } }) {
+export function CtaBand({ title = "Put an AI planning engine behind every inventory decision", text = "Create an account, load your catalogue and sales history, and RestockIQ produces forecasts, reorder points and purchase orders for every SKU.", primary = { href: "/signup", label: "Create account" }, secondary = { href: "/login", label: "Sign in" } }: { title?: string; text?: string; primary?: { href: string; label: string }; secondary?: { href: string; label: string } }) {
   return (
     <section className="bg-navy">
       <div className="container-x py-20 text-center">

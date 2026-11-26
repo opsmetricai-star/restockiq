@@ -13,7 +13,7 @@ export default async function Replenishment() {
       <div className="card overflow-x-auto p-2">
         {!rows.length ? <Empty title="Nothing to plan yet">Run a forecast first.</Empty> : (
           <table className="data"><thead><tr><th>SKU</th><th>Status</th><th>On hand</th><th>On order</th><th>Days cover</th><th>Safety stock</th><th>Reorder point</th><th>Suggested order</th></tr></thead>
-            <tbody>{rows.map((r) => (<tr key={r.sku}><td className="font-medium">{r.sku}</td><td><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge[r.r.status]}`}>{r.r.status}</span></td><td>{r.on_hand}</td><td>{r.on_order}</td><td>{r.r.daysOfCover >= 9999 ? "∞" : r.r.daysOfCover}</td><td>{r.r.safetyStock}</td><td>{r.r.reorderPoint}</td><td className="font-bold">{r.r.orderQty || "–"}</td></tr>))}</tbody></table>
+            <tbody>{rows.map((r) => (<tr key={r.sku}><td className="font-medium">{r.sku}</td><td><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge[r.r.status]}`}>{r.r.status}</span></td><td>{r.on_hand}</td><td>{r.on_order}</td><td>{r.r.daysOfCover >= 9999 ? "∞" : r.r.daysOfCover}</td><td>{r.r.safetyStock}</td><td>{r.r.reorderPoint}</td><td className="font-bold">{r.r.orderQty || "None"}</td></tr>))}</tbody></table>
         )}
       </div>
     </>

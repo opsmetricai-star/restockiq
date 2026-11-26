@@ -132,7 +132,7 @@ export function Assistant() {
         <div className="card space-y-4 p-6">
           <p className="text-lg">{out.summary}</p>
           {out.answer && <p className="rounded-lg bg-sky p-4">{out.answer}</p>}
-          <div className="grid gap-3 md:grid-cols-2">{out.risks.map((r) => (<div key={r.sku + r.issue} className="rounded-xl border border-line p-4"><div className="font-bold">{r.sku}</div><div className="text-sm text-muted">{r.issue}</div><div className="mt-2 text-sm font-medium text-brand">→ {r.action}</div></div>))}</div>
+          <div className="grid gap-3 md:grid-cols-2">{out.risks.map((r) => (<div key={r.sku + r.issue} className="rounded-xl border border-line p-4"><div className="font-bold">{r.sku}</div><div className="text-sm text-muted">{r.issue}</div><div className="mt-2 text-sm font-medium text-brand">Action: {r.action}</div></div>))}</div>
         </div>
       )}
     </div>
