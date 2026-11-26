@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan, limitsFor, getUsage, bumpUsage } from "@/lib/account";
 import { toDaily, forecast } from "@/lib/engine/planning";
+import { createAlerts } from "@/lib/analytics";
 
 const body = z.object({ horizon_days: z.number().int().min(7).max(180).default(28), sku: z.string().optional() });
 
@@ -34,5 +35,6 @@ export async function POST(req: Request) {
   const { error } = await sb.from("forecasts").insert(rows);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   await bumpUsage(user.id, "forecasts");
+  await createAlerts(user.id).catch(() => 0);
   return NextResponse.json({ forecasted: rows.length });
 }

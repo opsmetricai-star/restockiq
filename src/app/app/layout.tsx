@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Package, Upload, LineChart, Repeat, ClipboardList, Sparkles, CreditCard, Settings, Bell, Shield, LogOut } from "lucide-react";
+import { Truck, BarChart3, LayoutDashboard, Package, Upload, LineChart, Repeat, ClipboardList, Sparkles, CreditCard, Settings, Bell, Shield, LogOut } from "lucide-react";
 import { Logo } from "@/components/site/Logo";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan, isAdmin } from "@/lib/account";
@@ -10,7 +10,7 @@ export const metadata = { title: "Workspace | RestockIQ" };
 
 const NAV = [
   ["/app", "Dashboard", LayoutDashboard], ["/app/products", "Products", Package], ["/app/import", "Import data", Upload],
-  ["/app/forecasts", "Forecasts", LineChart], ["/app/replenishment", "Replenishment", Repeat], ["/app/orders", "Purchase orders", ClipboardList],
+  ["/app/forecasts", "Forecasts", LineChart], ["/app/replenishment", "Replenishment", Repeat], ["/app/orders", "Purchase orders", ClipboardList], ["/app/suppliers", "Suppliers", Truck], ["/app/reports", "Reports", BarChart3],
   ["/app/assistant", "AI assistant", Sparkles], ["/app/notifications", "Notifications", Bell], ["/app/billing", "Billing", CreditCard], ["/app/settings", "Settings", Settings],
 ] as const;
 

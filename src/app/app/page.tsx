@@ -4,6 +4,7 @@ import { loadPlan } from "@/lib/plan-data";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan, getUsage, limitsFor } from "@/lib/account";
 import { SalesChart } from "@/components/app/SalesChart";
+import { AlertButton } from "@/components/app/ProductTools";
 
 export default async function Dashboard() {
   const sb = await createClient();
@@ -19,11 +20,12 @@ export default async function Dashboard() {
   const risk = rows.filter((r) => r.r.status === "stockout-risk").length;
   const reorder = rows.filter((r) => r.r.status === "reorder").length;
   const over = rows.filter((r) => r.r.status === "overstock").length;
-  const wapes = rows.map((r) => r.wape).filter((w): w is number => w != null);
+  const actions = rows.filter((r) => r.r.status === "stockout-risk" || r.r.status === "reorder").sort((a, b) => (a.r.status === "stockout-risk" ? 0 : 1) - (b.r.status === "stockout-risk" ? 0 : 1) || a.r.daysOfCover - b.r.daysOfCover).slice(0, 8);
+  const wapes =rows.map((r) => r.wape).filter((w): w is number => w != null);
   const avgWape = wapes.length ? wapes.reduce((a, b) => a + b, 0) / wapes.length : null;
   return (
     <>
-      <PageTitle title="Dashboard" sub="Inventory health at a glance" />
+      <PageTitle title="Dashboard" sub="Inventory health at a glance" action={<AlertButton />} />
       {rows.length === 0 ? (
         <Empty title="Welcome to RestockIQ">Start by <Link className="font-bold text-brand" href="/app/import">importing your products and sales history</Link>, then run a forecast.</Empty>
       ) : (
@@ -43,6 +45,13 @@ export default async function Dashboard() {
               <Meter label="SKUs" used={rows.length} limit={lim.skus} />
               <div className="text-sm text-muted">Average forecast WAPE: {avgWape == null ? "run a forecast" : (avgWape * 100).toFixed(1) + "%"}</div>
             </div>
+          </div>
+          <div className="card mt-6 overflow-x-auto p-6">
+            <div className="mb-3 flex items-center justify-between"><h2 className="font-bold">Priority actions</h2><Link href="/app/replenishment" className="text-sm font-bold text-brand">Full replenishment plan</Link></div>
+            {actions.length === 0 ? <p className="text-muted">{rows.some((r) => r.method) ? "No SKUs need action right now." : "Run a forecast to generate recommended actions."}</p> : (
+              <table className="data"><thead><tr><th>SKU</th><th>Status</th><th>On hand</th><th>Days cover</th><th>Suggested order</th></tr></thead>
+                <tbody>{actions.map((r) => (<tr key={r.sku}><td><Link className="font-medium text-brand" href={`/app/products/${encodeURIComponent(r.sku)}`}>{r.sku}</Link> <span className="text-muted">{r.name}</span></td><td className="capitalize">{r.r.status}</td><td>{r.on_hand}</td><td>{r.r.daysOfCover >= 9999 ? "n/a" : r.r.daysOfCover}</td><td className="font-bold">{r.r.orderQty || "None"}</td></tr>))}</tbody></table>
+            )}
           </div>
         </>
       )}
